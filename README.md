@@ -86,5 +86,4 @@ Arquivo: `images/modelo_oficina.png`
 ## 📜 Script SQL (DDL)
 Arquivo: `script.sql` — script de criação das tabelas (DDL) incluído neste repositório.
 
----
-> Gerado automaticamente para o desafio de projeto. Para melhorar: adicionar chaves surrogadas com auto-incremento, índices, regras de integridade mais específicas e gatilhos para atualizações de status/valor_total.
+
