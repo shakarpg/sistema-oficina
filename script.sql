@@ -1,4 +1,4 @@
--- Script DDL para o esquema conceitual da oficina
+-- Criação das tabelas (DDL)
 CREATE TABLE Cliente (
     id_cliente INT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
@@ -81,3 +81,81 @@ CREATE TABLE OS_Peca (
     FOREIGN KEY (id_os) REFERENCES Ordem_Servico(id_os),
     FOREIGN KEY (id_peca) REFERENCES Peca(id_peca)
 );
+
+-- Inserção de dados de teste (DML)
+INSERT INTO Cliente VALUES
+(1, 'João Silva', '11999999999', 'joao@email.com', 'Rua A, 123'),
+(2, 'Maria Oliveira', '11988888888', 'maria@email.com', 'Av B, 456');
+
+INSERT INTO Veiculo VALUES
+(1, 1, 'ABC1234', 'Toyota', 'Corolla', 2020),
+(2, 2, 'XYZ5678', 'Honda', 'Civic', 2018);
+
+INSERT INTO Equipe VALUES
+(1, 'Equipe Alfa'),
+(2, 'Equipe Beta');
+
+INSERT INTO Mecanico VALUES
+(1, 1, 'M001', 'Carlos Souza', 'Rua C, 789', 'Motor'),
+(2, 1, 'M002', 'Pedro Santos', 'Rua D, 321', 'Suspensão'),
+(3, 2, 'M003', 'Lucas Lima', 'Rua E, 654', 'Freios');
+
+INSERT INTO Servico VALUES
+(1, 'S001', 'Troca de óleo', 150.00),
+(2, 'S002', 'Alinhamento', 100.00);
+
+INSERT INTO Peca VALUES
+(1, 'P001', 'Filtro de óleo', 50.00, 'Bosch'),
+(2, 'P002', 'Pneu 175/65 R14', 300.00, 'Pirelli');
+
+INSERT INTO Ordem_Servico VALUES
+(1, 'OS001', 1, 1, '2025-08-01', '2025-08-05', NULL, NULL, 'Aberta', 'João Silva'),
+(2, 'OS002', 2, 2, '2025-08-02', '2025-08-06', NULL, NULL, 'Aberta', 'Maria Oliveira');
+
+INSERT INTO OS_Servico VALUES
+(1, 1, 1, 150.00),
+(1, 2, 1, 100.00),
+(2, 2, 1, 100.00);
+
+INSERT INTO OS_Peca VALUES
+(1, 1, 1, 50.00),
+(2, 2, 4, 300.00);
+
+-- Consultas
+
+-- 1) Recuperações simples
+SELECT nome, telefone FROM Cliente;
+
+-- 2) Filtro WHERE
+SELECT * FROM Veiculo WHERE ano >= 2020;
+
+-- 3) Atributo derivado (total peças por OS)
+SELECT id_os, SUM(quantidade * valor_unitario_aplicado) AS total_pecas
+FROM OS_Peca
+GROUP BY id_os;
+
+-- 4) Ordenação
+SELECT * FROM Servico ORDER BY valor_mao_obra DESC;
+
+-- 5) HAVING (OS com mais de R$ 200 em peças)
+SELECT id_os, SUM(quantidade * valor_unitario_aplicado) AS total_pecas
+FROM OS_Peca
+GROUP BY id_os
+HAVING total_pecas > 200;
+
+-- 6) JOIN (OS com dados do cliente e veículo)
+SELECT os.numero_os, c.nome AS cliente, v.placa, os.status
+FROM Ordem_Servico os
+JOIN Veiculo v ON os.id_veiculo = v.id_veiculo
+JOIN Cliente c ON v.id_cliente = c.id_cliente;
+
+-- 7) JOIN com agregação (valor total por cliente considerando serviços e peças)
+SELECT c.nome,
+       SUM(COALESCE(osv.valor_mao_obra_aplicado * osv.quantidade, 0)) +
+       SUM(COALESCE(osp.valor_unitario_aplicado * osp.quantidade, 0)) AS valor_total
+FROM Cliente c
+JOIN Veiculo v ON c.id_cliente = v.id_cliente
+JOIN Ordem_Servico os ON v.id_veiculo = os.id_veiculo
+LEFT JOIN OS_Servico osv ON os.id_os = osv.id_os
+LEFT JOIN OS_Peca osp ON os.id_os = osp.id_os
+GROUP BY c.nome;
